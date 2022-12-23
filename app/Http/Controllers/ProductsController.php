@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\ProductRepository;
 use App\Traits\ResponseTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -10,15 +11,48 @@ use Illuminate\Http\Request;
 class ProductsController extends Controller
 {
     use ResponseTrait;
+
+    public $productRepository;
+    public function __construct(ProductRepository $productRepository)
+    {
+        $this->productRepository =$productRepository;
+    }
+
+
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * @OA\Get(
+     *     path="/api/products",
+     *     tags={"Products"},
+     *     summary="Get all products for REST API",
+     *     description="Multiple status values can be provided with comma separated string",
+     *     operationId="index",
+     *     @OA\Parameter(
+     *         name="perPage",
+     *         in="query",
+     *         description="Per page count",
+     *         required=false,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="10",
+     *             type="integer",
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     )
+     * )
      */
+
     public function index():JsonResponse
     {
         try {
-            return $this->responseSucess([], 'Product fetch successfully');
+            $productRepository = new ProductRepository();
+            return $this->responseSucess($this->productRepository->getAll(request()->perPage), 'Product fetch successfully');
         } catch (Exception $e) {
             return $this->responseError([], $e->getMessage());
         }
